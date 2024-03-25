@@ -37,6 +37,15 @@ struct BorderRenderInfo {
     half4 color;
     std::vector<int32_t> layerIds;
 };
+
+// Interface of composition engine power hint callback.
+struct ICEPowerCallback {
+    virtual void notifyCpuLoadUp() = 0;
+
+protected:
+    ~ICEPowerCallback() = default;
+};
+
 /**
  * A parameter object for refreshing a set of outputs
  */
@@ -57,9 +66,6 @@ struct CompositionRefreshArgs {
 
     // Controls how the color mode is chosen for an output
     OutputColorSetting outputColorSetting{OutputColorSetting::kEnhanced};
-
-    // If not Dataspace::UNKNOWN, overrides the dataspace on each output
-    ui::Dataspace colorSpaceAgnosticDataspace{ui::Dataspace::UNKNOWN};
 
     // Forces a color mode on the outputs being refreshed
     ui::ColorMode forceOutputColorMode{ui::ColorMode::NATIVE};
@@ -90,12 +96,17 @@ struct CompositionRefreshArgs {
     // The expected time for the next present
     nsecs_t expectedPresentTime{0};
 
+    // The frameInterval for the next present
+    Fps frameInterval{};
+
     // If set, a frame has been scheduled for that time.
     std::optional<std::chrono::steady_clock::time_point> scheduledFrameTime;
 
     std::vector<BorderRenderInfo> borderInfoList;
 
     bool hasTrustedPresentationListener = false;
+
+    ICEPowerCallback* powerCallback = nullptr;
 };
 
 } // namespace android::compositionengine
